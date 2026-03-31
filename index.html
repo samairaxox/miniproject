@@ -1,13 +1,97 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>miniproject</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Productivity Hub (Vanilla JS)</title>
+    <!-- Modern Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body class="dark-theme">
+    <nav class="navbar">
+        <div class="logo">ProHub</div>
+        <div class="nav-links">
+            <button class="nav-btn active" data-target="dashboard">Dashboard</button>
+            <button class="nav-btn" data-target="workspace">Workspace</button>
+            <button class="nav-btn" data-target="focus">Focus Mode</button>
+        </div>
+    </nav>
+
+    <main class="container">
+        <!-- Dashboard Section -->
+        <section id="dashboard" class="page active">
+            <header>
+                <h1>Dashboard</h1>
+                <p>Overview of your productivity.</p>
+            </header>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>Tasks Completed</h3>
+                    <div class="stat-value">12</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Tasks Pending</h3>
+                    <div class="stat-value">5</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Focus Time Today</h3>
+                    <div class="stat-value">2h 15m</div>
+                </div>
+            </div>
+            <div class="action-buttons">
+                <!-- Using onclick inline for simplicity as requested, mapping to the navigate function -->
+                <button class="btn primary" onclick="navigate('workspace')">Go to Workspace</button>
+                <button class="btn secondary" onclick="navigate('focus')">Start Focus Mode</button>
+            </div>
+        </section>
+
+        <!-- Workspace Section -->
+        <section id="workspace" class="page">
+            <header>
+                <h1>Workspace</h1>
+                <p>Manage your tasks efficiently.</p>
+            </header>
+            <div class="kanban-board">
+                <div class="column card">
+                    <h2>To Do</h2>
+                    <div class="task-list">
+                        <div class="empty-state">No tasks yet</div>
+                    </div>
+                </div>
+                <div class="column card">
+                    <h2>In Progress</h2>
+                    <div class="task-list">
+                         <div class="empty-state">No tasks yet</div>
+                    </div>
+                </div>
+                <div class="column card">
+                    <h2>Done</h2>
+                    <div class="task-list">
+                         <div class="empty-state">No tasks yet</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Focus Mode Section -->
+        <section id="focus" class="page">
+            <div class="pomodoro-container">
+                <h1>Focus Mode</h1>
+                <p class="subtitle">Complete your deep work without distractions.</p>
+                <div class="timer-card card">
+                    <div id="time-display" class="time">25:00</div>
+                    <div id="timer-status" class="status">Ready to focus</div>
+                    <div class="timer-controls">
+                        <button id="start-btn" class="btn primary">Start</button>
+                        <button id="pause-btn" class="btn secondary" disabled>Pause</button>
+                        <button id="reset-btn" class="btn outline">Reset</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="./script.js"></script>
+</body>
 </html>
