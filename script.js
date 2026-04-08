@@ -117,6 +117,43 @@ const listTodo = document.getElementById('list-todo');
 const listInProgress = document.getElementById('list-inProgress');
 const listDone = document.getElementById('list-done');
 
+// Drag and drop state
+let draggedTaskId = null;
+let draggedTaskStatus = null;
+
+const columnsNodes = {
+    todo: listTodo,
+    inProgress: listInProgress,
+    done: listDone
+};
+
+for (const [status, container] of Object.entries(columnsNodes)) {
+    if (!container) continue;
+
+    container.addEventListener('dragover', e => {
+        e.preventDefault(); 
+        container.classList.add('drag-over');
+    });
+
+    container.addEventListener('dragleave', () => {
+        container.classList.remove('drag-over');
+    });
+
+    container.addEventListener('drop', e => {
+        e.preventDefault();
+        container.classList.remove('drag-over');
+        
+        if (draggedTaskId && draggedTaskStatus !== status) {
+            const taskIndex = tasks[draggedTaskStatus].findIndex(t => t.id === draggedTaskId);
+            if (taskIndex > -1) {
+                const [task] = tasks[draggedTaskStatus].splice(taskIndex, 1);
+                tasks[status].push(task);
+                renderTasks();
+            }
+        }
+    });
+}
+
 function openModal() {
     modalOverlay.classList.add('active');
 }
@@ -172,6 +209,19 @@ function renderTasks() {
         columnTasks.forEach(task => {
             const taskEl = document.createElement('div');
             taskEl.className = 'task-card';
+            taskEl.draggable = true;
+            
+            taskEl.addEventListener('dragstart', () => {
+                taskEl.classList.add('dragging');
+                draggedTaskId = task.id;
+                draggedTaskStatus = status;
+            });
+            
+            taskEl.addEventListener('dragend', () => {
+                taskEl.classList.remove('dragging');
+                draggedTaskId = null;
+                draggedTaskStatus = null;
+            });
             
             taskEl.innerHTML = `
                 <div class="task-header">
@@ -187,3 +237,47 @@ function renderTasks() {
 
 // Initial render
 renderTasks();
+
+// ==== Smart Task Generator ====
+const smartGoalInput = document.getElementById('smart-goal-input');
+const generateTasksBtn = document.getElementById('generate-tasks-btn');
+
+if (generateTasksBtn) {
+    generateTasksBtn.addEventListener('click', () => {
+        const goal = smartGoalInput.value.toLowerCase();
+        if (!goal) return;
+
+        let generated = [];
+
+        if (goal.includes('project')) {
+            generated = [
+                { title: 'Research idea', priority: 'Medium' },
+                { title: 'Design UI', priority: 'High' },
+                { title: 'Build frontend', priority: 'High' },
+                { title: 'Test app', priority: 'Medium' }
+            ];
+        } else if (goal.includes('study')) {
+            generated = [
+                { title: 'Revise concepts', priority: 'High' },
+                { title: 'Practice questions', priority: 'High' },
+                { title: 'Mock test', priority: 'Medium' },
+                { title: 'Analyze mistakes', priority: 'High' }
+            ];
+        } else {
+            alert("Please include 'project' or 'study' in your goal to get suggestions.");
+            return;
+        }
+
+        generated.forEach((item, index) => {
+            tasks.todo.push({
+                id: Date.now().toString() + '-' + index,
+                title: item.title,
+                description: `Generated for goal: ${smartGoalInput.value}`,
+                priority: item.priority
+            });
+        });
+
+        smartGoalInput.value = '';
+        renderTasks();
+    });
+}
