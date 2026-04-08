@@ -48,26 +48,29 @@
 
         <!-- Workspace Section -->
         <section id="workspace" class="page">
-            <header>
-                <h1>Workspace</h1>
-                <p>Manage your tasks efficiently.</p>
+            <header class="workspace-header">
+                <div>
+                    <h1>Workspace</h1>
+                    <p>Manage your tasks efficiently.</p>
+                </div>
+                <button id="add-task-btn" class="btn primary">Add Task</button>
             </header>
             <div class="kanban-board">
                 <div class="column card">
                     <h2>To Do</h2>
-                    <div class="task-list">
+                    <div class="task-list" id="list-todo">
                         <div class="empty-state">No tasks yet</div>
                     </div>
                 </div>
                 <div class="column card">
                     <h2>In Progress</h2>
-                    <div class="task-list">
+                    <div class="task-list" id="list-inProgress">
                          <div class="empty-state">No tasks yet</div>
                     </div>
                 </div>
                 <div class="column card">
                     <h2>Done</h2>
-                    <div class="task-list">
+                    <div class="task-list" id="list-done">
                          <div class="empty-state">No tasks yet</div>
                     </div>
                 </div>
@@ -90,6 +93,34 @@
                 </div>
             </div>
         </section>
+        <!-- Task Modal -->
+        <div id="task-modal" class="modal-overlay">
+            <div class="modal">
+                <h2>Add New Task</h2>
+                <form id="task-form">
+                    <div class="form-group">
+                        <label for="task-title">Title</label>
+                        <input type="text" id="task-title" required placeholder="Task title">
+                    </div>
+                    <div class="form-group">
+                        <label for="task-desc">Description</label>
+                        <textarea id="task-desc" rows="3" placeholder="Task description"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="task-priority">Priority</label>
+                        <select id="task-priority">
+                            <option value="Low">Low</option>
+                            <option selected value="Medium">Medium</option>
+                            <option value="High">High</option>
+                        </select>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="button" id="close-modal-btn" class="btn secondary">Cancel</button>
+                        <button type="submit" class="btn primary">Add Task</button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </main>
 
     <script src="./script.js"></script>

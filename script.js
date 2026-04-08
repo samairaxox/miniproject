@@ -99,3 +99,91 @@ resetBtn.addEventListener('click', resetTimer);
 
 // Initialize display on load
 updateDisplay();
+
+// ==== Workspace Task Logic ====
+const tasks = {
+    todo: [],
+    inProgress: [],
+    done: []
+};
+
+// DOM Elements
+const addTaskBtn = document.getElementById('add-task-btn');
+const modalOverlay = document.getElementById('task-modal');
+const closeModalBtn = document.getElementById('close-modal-btn');
+const taskForm = document.getElementById('task-form');
+
+const listTodo = document.getElementById('list-todo');
+const listInProgress = document.getElementById('list-inProgress');
+const listDone = document.getElementById('list-done');
+
+function openModal() {
+    modalOverlay.classList.add('active');
+}
+
+function closeModal() {
+    modalOverlay.classList.remove('active');
+    taskForm.reset();
+}
+
+addTaskBtn.addEventListener('click', openModal);
+closeModalBtn.addEventListener('click', closeModal);
+modalOverlay.addEventListener('click', (e) => {
+    if (e.target === modalOverlay) closeModal();
+});
+
+taskForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    
+    const title = document.getElementById('task-title').value;
+    const desc = document.getElementById('task-desc').value;
+    const priority = document.getElementById('task-priority').value;
+
+    const newTask = {
+        id: Date.now().toString(),
+        title,
+        description: desc,
+        priority
+    };
+
+    tasks.todo.push(newTask);
+    renderTasks();
+    closeModal();
+});
+
+function renderTasks() {
+    const columns = {
+        todo: listTodo,
+        inProgress: listInProgress,
+        done: listDone
+    };
+
+    for (const [status, container] of Object.entries(columns)) {
+        if (!container) continue; // safety check
+        
+        container.innerHTML = '';
+        
+        const columnTasks = tasks[status];
+        if (columnTasks.length === 0) {
+            container.innerHTML = '<div class="empty-state">No tasks yet</div>';
+            continue;
+        }
+
+        columnTasks.forEach(task => {
+            const taskEl = document.createElement('div');
+            taskEl.className = 'task-card';
+            
+            taskEl.innerHTML = `
+                <div class="task-header">
+                    <h3 class="task-title">${task.title}</h3>
+                    <span class="task-priority badge priority-${task.priority}">${task.priority}</span>
+                </div>
+                ${task.description ? `<p class="task-desc">${task.description}</p>` : ''}
+            `;
+            container.appendChild(taskEl);
+        });
+    }
+}
+
+// Initial render
+renderTasks();
