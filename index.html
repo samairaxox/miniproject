@@ -15,7 +15,9 @@
             <button class="nav-btn active" data-target="dashboard">Dashboard</button>
             <button class="nav-btn" data-target="workspace">Workspace</button>
             <button class="nav-btn" data-target="focus">Focus Mode</button>
+            <button class="nav-btn" data-target="notes">Notes</button>
         </div>
+        <button id="theme-toggle" class="theme-btn" title="Toggle Dark Mode">🌙</button>
     </nav>
 
     <main class="container">
@@ -28,15 +30,22 @@
             <div class="stats-grid">
                 <div class="stat-card">
                     <h3>Tasks Completed</h3>
-                    <div class="stat-value">12</div>
+                    <div class="stat-value" id="stat-tasks-done">0</div>
                 </div>
                 <div class="stat-card">
                     <h3>Tasks Pending</h3>
-                    <div class="stat-value">5</div>
+                    <div class="stat-value" id="stat-tasks-pending">0</div>
                 </div>
                 <div class="stat-card">
                     <h3>Focus Time Today</h3>
-                    <div class="stat-value">2h 15m</div>
+                    <div class="stat-value" id="stat-focus-time">0m</div>
+                </div>
+            </div>
+            <div class="focus-growth-section">
+                <h2>Your Focus Growth</h2>
+                <div id="focus-garden" class="garden-container">
+                    <div id="garden-visual" class="plant-visual"></div>
+                    <p id="garden-text">Complete focus sessions to grow your plant!</p>
                 </div>
             </div>
             <div class="action-buttons">
@@ -53,7 +62,10 @@
                     <h1>Workspace</h1>
                     <p>Manage your tasks efficiently.</p>
                 </div>
-                <button id="add-task-btn" class="btn primary">Add Task</button>
+                <div class="workspace-actions">
+                    <input type="text" id="search-tasks-input" placeholder="Search tasks..." class="search-input">
+                    <button id="add-task-btn" class="btn primary">Add Task</button>
+                </div>
             </header>
 
             <div class="smart-generator card">
@@ -92,14 +104,25 @@
                 <h1>Focus Mode</h1>
                 <p class="subtitle">Complete your deep work without distractions.</p>
                 <div class="timer-card card">
-                    <div id="time-display" class="time">25:00</div>
                     <div id="timer-status" class="status">Ready to focus</div>
+                    <div id="time-display" class="time">25:00</div>
                     <div class="timer-controls">
                         <button id="start-btn" class="btn primary">Start</button>
                         <button id="pause-btn" class="btn secondary" disabled>Pause</button>
                         <button id="reset-btn" class="btn outline">Reset</button>
                     </div>
                 </div>
+            </div>
+        </section>
+
+        <!-- Notes Section -->
+        <section id="notes" class="page">
+            <header>
+                <h1>Notes</h1>
+                <p>Jot down your thoughts and ideas. Automatically saved.</p>
+            </header>
+            <div class="notes-container card">
+                <textarea id="notes-textarea" placeholder="Start typing here..."></textarea>
             </div>
         </section>
         <!-- Task Modal -->

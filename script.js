@@ -1,10 +1,107 @@
+// ==== State and LocalStorage ====
+let focusSessions = 0;
+let isDarkMode = false;
+let notesContent = "";
+let tasks = {
+    todo: [],
+    inProgress: [],
+    done: []
+};
+
+function saveData() {
+    localStorage.setItem('prohub_tasks', JSON.stringify(tasks));
+    localStorage.setItem('prohub_focusSessions', focusSessions);
+    localStorage.setItem('prohub_darkMode', isDarkMode);
+    localStorage.setItem('prohub_notes', notesContent);
+}
+
+function loadData() {
+    const savedTasks = localStorage.getItem('prohub_tasks');
+    if (savedTasks) {
+        Object.assign(tasks, JSON.parse(savedTasks));
+    }
+    focusSessions = parseInt(localStorage.getItem('prohub_focusSessions')) || 0;
+    isDarkMode = localStorage.getItem('prohub_darkMode') === 'true';
+    notesContent = localStorage.getItem('prohub_notes') || '';
+    
+    if (isDarkMode) {
+        document.body.classList.add('dark-mode');
+    }
+    
+    const notesTextarea = document.getElementById('notes-textarea');
+    if (notesTextarea) {
+        notesTextarea.value = notesContent;
+    }
+}
+
+// ==== Live Stats & Focus Garden ====
+function updateLiveStats() {
+    const statTasksDone = document.getElementById('stat-tasks-done');
+    const statTasksPending = document.getElementById('stat-tasks-pending');
+    const statFocusTime = document.getElementById('stat-focus-time');
+
+    if (statTasksDone) {
+        statTasksDone.textContent = tasks.done.length;
+    }
+    if (statTasksPending) {
+        statTasksPending.textContent = tasks.todo.length + tasks.inProgress.length;
+    }
+    if (statFocusTime) {
+        const totalFocusMins = focusSessions * 25;
+        const hours = Math.floor(totalFocusMins / 60);
+        const mins = totalFocusMins % 60;
+        statFocusTime.textContent = hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
+    }
+}
+
+function updateFocusGarden() {
+    const gardenVisual = document.getElementById('garden-visual');
+    if (!gardenVisual) return;
+
+    let plantEmoji = '';
+    if (focusSessions === 0) {
+        plantEmoji = '';
+    } else if (focusSessions <= 2) {
+        plantEmoji = '🌱';
+    } else if (focusSessions <= 4) {
+        plantEmoji = '🌿';
+    } else {
+        plantEmoji = '🌳';
+    }
+    
+    // Smooth transition logic (animation scale)
+    gardenVisual.style.transform = 'scale(0.8)';
+    gardenVisual.style.opacity = '0.5';
+    setTimeout(() => {
+        gardenVisual.textContent = plantEmoji;
+        gardenVisual.style.transform = 'scale(1)';
+        gardenVisual.style.opacity = '1';
+    }, 200);
+}
+
+// ==== Setup Theme Toggle & Notes ====
+const themeToggle = document.getElementById('theme-toggle');
+if (themeToggle) {
+    themeToggle.addEventListener('click', () => {
+        isDarkMode = !isDarkMode;
+        document.body.classList.toggle('dark-mode', isDarkMode);
+        saveData();
+    });
+}
+
+const notesTextarea = document.getElementById('notes-textarea');
+if (notesTextarea) {
+    notesTextarea.addEventListener('input', (e) => {
+        notesContent = e.target.value;
+        saveData();
+    });
+}
+
 // ==== Navigation Logic ====
 const navBtns = document.querySelectorAll('.nav-btn');
 const pages = document.querySelectorAll('.page');
 
-// Global navigate function to allow inline onclick handlers in HTML
 window.navigate = function(targetId) {
-    // 1. Show target page, hide others
     pages.forEach(page => {
         if (page.id === targetId) {
             page.classList.add('active');
@@ -13,7 +110,6 @@ window.navigate = function(targetId) {
         }
     });
 
-    // 2. Update active visual state for top navbar
     navBtns.forEach(btn => {
         if (btn.dataset.target === targetId) {
             btn.classList.add('active');
@@ -23,7 +119,6 @@ window.navigate = function(targetId) {
     });
 }
 
-// Attach event listeners to top navbar buttons
 navBtns.forEach(btn => {
     btn.addEventListener('click', () => {
         navigate(btn.dataset.target);
@@ -31,12 +126,13 @@ navBtns.forEach(btn => {
 });
 
 // ==== Pomodoro Timer Logic ====
-const DEFAULT_MINUTES = 25;
-let timerSeconds = DEFAULT_MINUTES * 60;
+const FOCUS_MINUTES = 25;
+const BREAK_MINUTES = 5;
+let isBreak = false;
+let timerSeconds = FOCUS_MINUTES * 60;
 let timerInterval = null;
 let isRunning = false;
 
-// DOM Elements
 const timeDisplay = document.getElementById('time-display');
 const timerStatus = document.getElementById('timer-status');
 const startBtn = document.getElementById('start-btn');
@@ -49,12 +145,30 @@ function updateDisplay() {
     timeDisplay.textContent = `${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
 }
 
+function playAlarm() {
+    try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        oscillator.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(800, audioCtx.currentTime);
+        gainNode.gain.setValueAtTime(1, audioCtx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1);
+        oscillator.start(audioCtx.currentTime);
+        oscillator.stop(audioCtx.currentTime + 1);
+    } catch(e) {
+        console.log("Audio alert skipped");
+    }
+}
+
 function startTimer() {
     if (isRunning) return;
-    if (timerSeconds <= 0) return; // Prevent start if time is 0
+    if (timerSeconds <= 0) return;
 
     isRunning = true;
-    timerStatus.textContent = 'Focusing...';
+    timerStatus.textContent = isBreak ? 'Taking a break...' : 'Focusing...';
     startBtn.disabled = true;
     pauseBtn.disabled = false;
 
@@ -65,16 +179,32 @@ function startTimer() {
         if (timerSeconds <= 0) {
             clearInterval(timerInterval);
             isRunning = false;
-            timerStatus.textContent = 'Session Complete!';
             startBtn.disabled = false;
             pauseBtn.disabled = true;
+            playAlarm();
+            
+            if (!isBreak) {
+                focusSessions++;
+                saveData();
+                updateFocusGarden();
+                updateLiveStats();
+                timerStatus.textContent = 'Focus Complete! Take a break.';
+                isBreak = true;
+                timerSeconds = BREAK_MINUTES * 60;
+                setTimeout(() => alert('Break time!'), 100);
+            } else {
+                timerStatus.textContent = 'Break Complete! Ready to focus.';
+                isBreak = false;
+                timerSeconds = FOCUS_MINUTES * 60;
+                setTimeout(() => alert('Back to focus!'), 100);
+            }
+            updateDisplay();
         }
     }, 1000);
 }
 
 function pauseTimer() {
     if (!isRunning) return;
-
     clearInterval(timerInterval);
     isRunning = false;
     timerStatus.textContent = 'Paused';
@@ -85,29 +215,19 @@ function pauseTimer() {
 function resetTimer() {
     clearInterval(timerInterval);
     isRunning = false;
-    timerSeconds = DEFAULT_MINUTES * 60;
+    isBreak = false;
+    timerSeconds = FOCUS_MINUTES * 60;
     timerStatus.textContent = 'Ready to focus';
     updateDisplay();
     startBtn.disabled = false;
     pauseBtn.disabled = true;
 }
 
-// Timer event listeners
 startBtn.addEventListener('click', startTimer);
 pauseBtn.addEventListener('click', pauseTimer);
 resetBtn.addEventListener('click', resetTimer);
 
-// Initialize display on load
-updateDisplay();
-
 // ==== Workspace Task Logic ====
-const tasks = {
-    todo: [],
-    inProgress: [],
-    done: []
-};
-
-// DOM Elements
 const addTaskBtn = document.getElementById('add-task-btn');
 const modalOverlay = document.getElementById('task-modal');
 const closeModalBtn = document.getElementById('close-modal-btn');
@@ -117,7 +237,6 @@ const listTodo = document.getElementById('list-todo');
 const listInProgress = document.getElementById('list-inProgress');
 const listDone = document.getElementById('list-done');
 
-// Drag and drop state
 let draggedTaskId = null;
 let draggedTaskStatus = null;
 
@@ -148,16 +267,22 @@ for (const [status, container] of Object.entries(columnsNodes)) {
             if (taskIndex > -1) {
                 const [task] = tasks[draggedTaskStatus].splice(taskIndex, 1);
                 tasks[status].push(task);
+                saveData();
                 renderTasks();
+                updateLiveStats();
+                
+                // Animation for Completed Task
+                if (status === 'done') {
+                    const cards = container.querySelectorAll('.task-card');
+                    const lastCard = Array.from(cards).find(c => c.dataset.id === task.id);
+                    if (lastCard) lastCard.classList.add('task-done-animation');
+                }
             }
         }
     });
 }
 
-function openModal() {
-    modalOverlay.classList.add('active');
-}
-
+function openModal() { modalOverlay.classList.add('active'); }
 function closeModal() {
     modalOverlay.classList.remove('active');
     taskForm.reset();
@@ -171,7 +296,6 @@ modalOverlay.addEventListener('click', (e) => {
 
 taskForm.addEventListener('submit', (e) => {
     e.preventDefault();
-    
     const title = document.getElementById('task-title').value;
     const desc = document.getElementById('task-desc').value;
     const priority = document.getElementById('task-priority').value;
@@ -184,25 +308,33 @@ taskForm.addEventListener('submit', (e) => {
     };
 
     tasks.todo.push(newTask);
+    saveData();
     renderTasks();
+    updateLiveStats();
     closeModal();
 });
 
-function renderTasks() {
-    const columns = {
-        todo: listTodo,
-        inProgress: listInProgress,
-        done: listDone
-    };
+// Search Tasks Logic
+let currentSearchQuery = "";
+const searchTasksInput = document.getElementById('search-tasks-input');
+if(searchTasksInput) {
+    searchTasksInput.addEventListener('input', (e) => {
+        currentSearchQuery = e.target.value.toLowerCase();
+        renderTasks();
+    });
+}
 
-    for (const [status, container] of Object.entries(columns)) {
-        if (!container) continue; // safety check
-        
+function renderTasks() {
+    for (const [status, container] of Object.entries(columnsNodes)) {
+        if (!container) continue;
         container.innerHTML = '';
         
-        const columnTasks = tasks[status];
+        const columnTasks = tasks[status].filter(task => 
+            task.title.toLowerCase().includes(currentSearchQuery)
+        );
+
         if (columnTasks.length === 0) {
-            container.innerHTML = '<div class="empty-state">No tasks yet</div>';
+            container.innerHTML = '<div class="empty-state">No tasks found</div>';
             continue;
         }
 
@@ -210,6 +342,7 @@ function renderTasks() {
             const taskEl = document.createElement('div');
             taskEl.className = 'task-card';
             taskEl.draggable = true;
+            taskEl.dataset.id = task.id;
             
             taskEl.addEventListener('dragstart', () => {
                 taskEl.classList.add('dragging');
@@ -235,9 +368,6 @@ function renderTasks() {
     }
 }
 
-// Initial render
-renderTasks();
-
 // ==== Smart Task Generator ====
 const smartGoalInput = document.getElementById('smart-goal-input');
 const generateTasksBtn = document.getElementById('generate-tasks-btn');
@@ -248,7 +378,6 @@ if (generateTasksBtn) {
         if (!goal) return;
 
         let generated = [];
-
         if (goal.includes('project')) {
             generated = [
                 { title: 'Research idea', priority: 'Medium' },
@@ -278,6 +407,15 @@ if (generateTasksBtn) {
         });
 
         smartGoalInput.value = '';
+        saveData();
         renderTasks();
+        updateLiveStats();
     });
 }
+
+// ==== Initialize All Data ====
+loadData();
+updateDisplay();
+renderTasks();
+updateLiveStats();
+updateFocusGarden();
