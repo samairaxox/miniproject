@@ -143,6 +143,13 @@ function updateDisplay() {
     const min = Math.floor(timerSeconds / 60);
     const sec = timerSeconds % 60;
     timeDisplay.textContent = `${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+    
+    const progressFill = document.getElementById('timer-progress');
+    if (progressFill) {
+        const totalSeconds = isBreak ? (BREAK_MINUTES * 60) : (FOCUS_MINUTES * 60);
+        const progress = ((totalSeconds - timerSeconds) / totalSeconds) * 100;
+        progressFill.style.width = `${progress}%`;
+    }
 }
 
 function playAlarm() {

@@ -3,14 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Productivity Hub (Vanilla JS)</title>
+    <title>FlowForge</title>
     <!-- Brutal Font -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="./style.css">
 </head>
 <body>
+    <div id="night-stars"></div>
+    <div class="night-moon"></div>
     <nav class="navbar">
-        <div class="logo">ProHub</div>
+        <div class="logo"><span class="logo-icon">🌿</span> FlowForge</div>
         <div class="nav-links">
             <button class="nav-btn active" data-target="dashboard">Dashboard</button>
             <button class="nav-btn" data-target="workspace">Workspace</button>
@@ -106,6 +108,9 @@
                 <div class="timer-card card">
                     <div id="timer-status" class="status">Ready to focus</div>
                     <div id="time-display" class="time">25:00</div>
+                    <div class="progress-container">
+                        <div id="timer-progress" class="progress-bar-fill"></div>
+                    </div>
                     <div class="timer-controls">
                         <button id="start-btn" class="btn primary">Start</button>
                         <button id="pause-btn" class="btn secondary" disabled>Pause</button>
